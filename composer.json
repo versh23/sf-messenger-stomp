@@ -1,0 +1,26 @@
+{
+    "name": "versh23/sf-messenger-stomp",
+    "type": "library",
+    "authors": [
+        {
+            "name": "versh23",
+            "email": "versh23@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.3",
+        "symfony/messenger": "^4.3",
+        "enqueue/stomp": "^0.9.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "Versh23\\": "src/"
+        }
+    },
+    "description": "add stomp transport to symfony messenger",
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.15",
+        "phpstan/phpstan": "^0.11.12"
+    },
+    "license": "MIT"
+}
