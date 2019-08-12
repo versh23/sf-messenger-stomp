@@ -72,7 +72,7 @@ class StompReceiver implements ReceiverInterface
             throw $exception;
         }
 
-        return [$envelope->with(new StompReceivedStamp($stompMessage))];
+        return [$envelope->with(new StompStamp($stompMessage))];
     }
 
     /**
@@ -105,10 +105,10 @@ class StompReceiver implements ReceiverInterface
         }
     }
 
-    private function findStompStamp(Envelope $envelope): StompReceivedStamp
+    private function findStompStamp(Envelope $envelope): StompStamp
     {
-        /** @var StompReceivedStamp|null $stompReceivedStamp */
-        $stompReceivedStamp = $envelope->last(StompReceivedStamp::class);
+        /** @var StompStamp|null $stompReceivedStamp */
+        $stompReceivedStamp = $envelope->last(StompStamp::class);
         if (null === $stompReceivedStamp) {
             throw new LogicException('No "StompReceivedStamp" stamp found on the Envelope.');
         }

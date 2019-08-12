@@ -34,11 +34,11 @@ class StompSender implements SenderInterface
         $encodedMessage = $this->serializer->encode($envelope);
 
         try {
-            $this->connection->send($encodedMessage['body'], $encodedMessage['headers'] ?? []);
+            $message = $this->connection->send($encodedMessage['body'], $encodedMessage['headers'] ?? []);
         } catch (Exception $e) {
             throw new TransportException($e->getMessage(), 0, $e);
         }
 
-        return $envelope;
+        return $envelope->with(new StompStamp($message));
     }
 }

@@ -41,11 +41,13 @@ class Connection
      * @throws InvalidDestinationException
      * @throws InvalidMessageException
      */
-    public function send(string $body, array $headers = []): void
+    public function send(string $body, array $headers = []): StompMessage
     {
         $message = $this->context->createMessage($body, [], $headers);
 
         $this->context->createProducer()->send($this->getQueue(), $message);
+
+        return $message;
     }
 
     public function get(): ?StompMessage

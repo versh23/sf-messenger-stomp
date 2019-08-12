@@ -7,7 +7,7 @@ namespace Versh23\Messenger\Transport\Stomp;
 use Enqueue\Stomp\StompMessage;
 use Symfony\Component\Messenger\Stamp\NonSendableStampInterface;
 
-class StompReceivedStamp implements NonSendableStampInterface
+class StompStamp implements NonSendableStampInterface
 {
     private $stompMessage;
 
