@@ -30,8 +30,29 @@ class Connection
 
     public static function create(string $dsn, array $options = []): self
     {
-        $factory = new StompConnectionFactory($dsn);
         $queue = $options['queue'] ?? 'sf-messenger-queue';
+
+        $config = [
+            'dsn' => $dsn,
+            'host' => $options['host'] ?? null,
+            'port' => $options['port'] ?? null,
+            'login' => $options['login'] ?? null,
+            'password' => $options['password'] ?? null,
+            'vhost' => $options['vhost'] ?? null,
+            'buffer_size' => $options['buffer_size'] ?? null,
+            'connection_timeout' => $options['connection_timeout'] ?? null,
+            'sync' => $options['sync'] ?? null,
+            'lazy' => $options['lazy'] ?? null,
+            'ssl_on' => $options['ssl_on'] ?? null,
+        ];
+
+        foreach ($config as $k => $v) {
+            if (null === $v) {
+                unset($config[$k]);
+            }
+        }
+
+        $factory = new StompConnectionFactory($config);
 
         return new self($factory->createContext(), $queue);
     }
