@@ -17,20 +17,34 @@ use Stomp\Exception\ConnectionException;
 class Connection
 {
     private $context;
-    private $queueName;
+    private $destinationName;
 
-    private $queue = null;
+    private $destination = null;
     private $consumer = null;
 
-    public function __construct(StompContext $context, string $queueName)
+    public function __construct(StompContext $context, string $destinationName)
     {
         $this->context = $context;
-        $this->queueName = $queueName;
+        $this->destinationName = $destinationName;
     }
 
     public static function create(string $dsn, array $options = []): self
     {
-        $queue = $options['queue'] ?? 'sf-messenger-queue';
+        $destinationName = $options['destination'] ?? null;
+        $queueName = $options['queue'] ?? null;
+        $topicName = $options['topic'] ?? null;
+
+        if (!$destinationName && $queueName) {
+            $destinationName = '/queue/'.$queueName;
+        }
+
+        if (!$destinationName && $topicName) {
+            $destinationName = '/topic/'.$topicName;
+        }
+
+        if (!$destinationName) {
+            $destinationName = '/queue/sf-messenger-queue';
+        }
 
         $config = [
             'dsn' => $dsn,
@@ -54,7 +68,7 @@ class Connection
 
         $factory = new StompConnectionFactory($config);
 
-        return new self($factory->createContext(), $queue);
+        return new self($factory->createContext(), $destinationName);
     }
 
     /**
@@ -66,7 +80,7 @@ class Connection
     {
         $message = $this->context->createMessage($body, [], $headers);
 
-        $this->context->createProducer()->send($this->getQueue(), $message);
+        $this->context->createProducer()->send($this->getDestination(), $message);
 
         return $message;
     }
@@ -101,19 +115,19 @@ class Connection
         $this->context->getStomp()->getConnection()->sendAlive();
     }
 
-    private function getQueue(): StompDestination
+    private function getDestination(): StompDestination
     {
-        if (!$this->queue) {
-            $this->queue = $this->context->createQueue($this->queueName);
+        if (!$this->destination) {
+            $this->destination = $this->context->createDestination($this->destinationName);
         }
 
-        return $this->queue;
+        return $this->destination;
     }
 
     private function getConsumer(): StompConsumer
     {
         if (!$this->consumer) {
-            $this->consumer = $this->context->createConsumer($this->getQueue());
+            $this->consumer = $this->context->createConsumer($this->getDestination());
         }
 
         return $this->consumer;
