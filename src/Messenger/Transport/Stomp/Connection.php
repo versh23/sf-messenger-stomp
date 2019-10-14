@@ -13,8 +13,6 @@ use Interop\Queue\Exception;
 use Interop\Queue\Exception\InvalidDestinationException;
 use Interop\Queue\Exception\InvalidMessageException;
 use Stomp\Exception\ConnectionException;
-use Stomp\Network\Observer\HeartbeatEmitter;
-use Stomp\Network\Observer\ServerAliveObserver;
 
 class Connection
 {
@@ -24,10 +22,15 @@ class Connection
     private $destination = null;
     private $consumer = null;
 
-    public function __construct(StompContext $context, string $destinationName)
+    private $readTimeout;
+    private $writeTimeout;
+
+    public function __construct(StompContext $context, string $destinationName, int $readTimeout, int $writeTimeout)
     {
         $this->context = $context;
         $this->destinationName = $destinationName;
+        $this->readTimeout = $readTimeout;
+        $this->writeTimeout = $writeTimeout;
     }
 
     public static function create(string $dsn, array $options = []): self
@@ -35,8 +38,9 @@ class Connection
         $destinationName = $options['destination'] ?? null;
         $queueName = $options['queue'] ?? null;
         $topicName = $options['topic'] ?? null;
-        $useHeartbeatEmitter = $options['useHeartbeatEmitter'] ?? false;
-        $useServerAliveObserver = $options['useServerAliveObserver'] ?? false;
+
+        $readTimeout = $options['readTimeout'] ?? 0;
+        $writeTimeout = $options['writeTimeout'] ?? 3;
 
         if (!$destinationName && $queueName) {
             $destinationName = '/queue/'.$queueName;
@@ -73,33 +77,9 @@ class Connection
         $factory = new StompConnectionFactory($config);
         $context = $factory->createContext();
 
-        if ($useHeartbeatEmitter || $useServerAliveObserver) {
-            $stomp = $context->getStomp();
-            $stomp->disconnect();
-            $connection = $stomp->getConnection();
+        $context->getStomp()->getConnection()->setWriteTimeout($writeTimeout);
 
-            $sendBeat = 0;
-            $receiveBeat = 0;
-
-            if ($useHeartbeatEmitter) {
-                $sendBeat = 3000;
-                $emitter = new HeartbeatEmitter($connection);
-                $connection->getObservers()->addObserver($emitter);
-            }
-
-            if ($useServerAliveObserver) {
-                $receiveBeat = 3000;
-                $connection->getObservers()->addObserver(new ServerAliveObserver());
-            }
-
-            $stomp->setHeartbeat($sendBeat, $receiveBeat);
-
-            $connection->setReadTimeout(0, 3 * 500000);
-
-            $stomp->connect();
-        }
-
-        return new self($context, $destinationName);
+        return new self($context, $destinationName, $readTimeout, $writeTimeout);
     }
 
     /**
@@ -119,7 +99,7 @@ class Connection
     public function get(): ?StompMessage
     {
         /** @var StompMessage|null $message */
-        $message = $this->getConsumer()->receiveNoWait();
+        $message = $this->readTimeout > 0 ? $this->getConsumer()->receive($this->readTimeout) : $this->getConsumer()->receiveNoWait();
 
         if (!$message) {
             return null;
@@ -143,7 +123,7 @@ class Connection
      */
     public function ping(): void
     {
-        $this->context->getStomp()->getConnection()->sendAlive();
+        $this->context->getStomp()->getConnection()->sendAlive($this->writeTimeout);
     }
 
     private function getDestination(): StompDestination
