@@ -39,8 +39,8 @@ class Connection
         $queueName = $options['queue'] ?? null;
         $topicName = $options['topic'] ?? null;
 
-        $readTimeout = $options['readTimeout'] ?? 0;
-        $writeTimeout = $options['writeTimeout'] ?? 3;
+        $readTimeout = $options['read_timeout'] ?? 0;
+        $writeTimeout = $options['write_timeout'] ?? 3;
 
         if (!$destinationName && $queueName) {
             $destinationName = '/queue/'.$queueName;
