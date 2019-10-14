@@ -13,6 +13,8 @@ use Interop\Queue\Exception;
 use Interop\Queue\Exception\InvalidDestinationException;
 use Interop\Queue\Exception\InvalidMessageException;
 use Stomp\Exception\ConnectionException;
+use Stomp\Network\Observer\HeartbeatEmitter;
+use Stomp\Network\Observer\ServerAliveObserver;
 
 class Connection
 {
@@ -33,6 +35,8 @@ class Connection
         $destinationName = $options['destination'] ?? null;
         $queueName = $options['queue'] ?? null;
         $topicName = $options['topic'] ?? null;
+        $useHeartbeatEmitter = $options['useHeartbeatEmitter'] ?? false;
+        $useServerAliveObserver = $options['useServerAliveObserver'] ?? false;
 
         if (!$destinationName && $queueName) {
             $destinationName = '/queue/'.$queueName;
@@ -67,8 +71,35 @@ class Connection
         }
 
         $factory = new StompConnectionFactory($config);
+        $context = $factory->createContext();
 
-        return new self($factory->createContext(), $destinationName);
+        if ($useHeartbeatEmitter || $useServerAliveObserver) {
+            $stomp = $context->getStomp();
+            $stomp->disconnect();
+            $connection = $stomp->getConnection();
+
+            $sendBeat = 0;
+            $receiveBeat = 0;
+
+            if ($useHeartbeatEmitter) {
+                $sendBeat = 3000;
+                $emitter = new HeartbeatEmitter($connection);
+                $connection->getObservers()->addObserver($emitter);
+            }
+
+            if ($useServerAliveObserver) {
+                $receiveBeat = 3000;
+                $connection->getObservers()->addObserver(new ServerAliveObserver());
+            }
+
+            $stomp->setHeartbeat($sendBeat, $receiveBeat);
+
+            $connection->setReadTimeout(0, 3 * 500000);
+
+            $stomp->connect();
+        }
+
+        return new self($context, $destinationName);
     }
 
     /**
