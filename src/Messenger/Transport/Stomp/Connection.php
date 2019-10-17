@@ -9,9 +9,7 @@ use Enqueue\Stomp\StompConsumer;
 use Enqueue\Stomp\StompContext;
 use Enqueue\Stomp\StompDestination;
 use Enqueue\Stomp\StompMessage;
-use Interop\Queue\Exception;
-use Interop\Queue\Exception\InvalidDestinationException;
-use Interop\Queue\Exception\InvalidMessageException;
+use Enqueue\Stomp\StompProducer;
 use Stomp\Exception\ConnectionException;
 
 class Connection
@@ -21,6 +19,7 @@ class Connection
 
     private $destination = null;
     private $consumer = null;
+    private $producer = null;
 
     private $readTimeout;
     private $writeTimeout;
@@ -39,7 +38,7 @@ class Connection
         $queueName = $options['queue'] ?? null;
         $topicName = $options['topic'] ?? null;
 
-        $readTimeout = $options['read_timeout'] ?? 0;
+        $readTimeout = ($options['read_timeout'] ?? 30) * 1000;
         $writeTimeout = $options['write_timeout'] ?? 3;
 
         if (!$destinationName && $queueName) {
@@ -82,16 +81,11 @@ class Connection
         return new self($context, $destinationName, $readTimeout, $writeTimeout);
     }
 
-    /**
-     * @throws Exception
-     * @throws InvalidDestinationException
-     * @throws InvalidMessageException
-     */
     public function send(string $body, array $headers = []): StompMessage
     {
         $message = $this->context->createMessage($body, [], $headers);
 
-        $this->context->createProducer()->send($this->getDestination(), $message);
+        $this->getProducer()->send($this->getDestination(), $message);
 
         return $message;
     }
@@ -99,7 +93,7 @@ class Connection
     public function get(): ?StompMessage
     {
         /** @var StompMessage|null $message */
-        $message = $this->readTimeout > 0 ? $this->getConsumer()->receive($this->readTimeout) : $this->getConsumer()->receiveNoWait();
+        $message = $this->getConsumer()->receive($this->readTimeout);
 
         if (!$message) {
             return null;
@@ -142,5 +136,14 @@ class Connection
         }
 
         return $this->consumer;
+    }
+
+    private function getProducer(): StompProducer
+    {
+        if (!$this->producer) {
+            $this->producer = $this->context->createProducer();
+        }
+
+        return $this->producer;
     }
 }
