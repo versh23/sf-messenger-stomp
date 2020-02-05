@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Versh23\Messenger\Transport\Stomp;
 
 use Enqueue\Stomp\StompMessage;
-use Stomp\Exception\ConnectionException;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
-use Symfony\Component\Messenger\Exception\LogicException;
 
 class StompReceiver implements ReceiverInterface
 {
@@ -49,12 +48,6 @@ class StompReceiver implements ReceiverInterface
      */
     public function get(): iterable
     {
-        try {
-            $this->connection->ping();
-        } catch (ConnectionException $e) {
-            throw new TransportException($e->getMessage());
-        }
-
         $stompMessage = $this->connection->get();
 
         if (!$stompMessage) {

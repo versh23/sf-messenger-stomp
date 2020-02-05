@@ -10,7 +10,6 @@ use Enqueue\Stomp\StompContext;
 use Enqueue\Stomp\StompDestination;
 use Enqueue\Stomp\StompMessage;
 use Enqueue\Stomp\StompProducer;
-use Stomp\Exception\ConnectionException;
 
 class Connection
 {
@@ -21,15 +20,13 @@ class Connection
     private $consumer = null;
     private $producer = null;
 
-    private $readTimeout;
-    private $writeTimeout;
+    private $receiveTimeout;
 
-    public function __construct(StompContext $context, string $destinationName, int $readTimeout, int $writeTimeout)
+    public function __construct(StompContext $context, string $destinationName, int $receiveTimeout)
     {
         $this->context = $context;
         $this->destinationName = $destinationName;
-        $this->readTimeout = $readTimeout;
-        $this->writeTimeout = $writeTimeout;
+        $this->receiveTimeout = $receiveTimeout;
     }
 
     public static function create(string $dsn, array $options = []): self
@@ -38,8 +35,7 @@ class Connection
         $queueName = $options['queue'] ?? null;
         $topicName = $options['topic'] ?? null;
 
-        $readTimeout = ($options['read_timeout'] ?? 30) * 1000;
-        $writeTimeout = $options['write_timeout'] ?? 3;
+        $receiveTimeout = ($options['receive_timeout'] ?? 30) * 1000;
 
         if (!$destinationName && $queueName) {
             $destinationName = '/queue/'.$queueName;
@@ -65,6 +61,10 @@ class Connection
             'sync' => $options['sync'] ?? null,
             'lazy' => $options['lazy'] ?? null,
             'ssl_on' => $options['ssl_on'] ?? null,
+            'write_timeout' => $options['write_timeout'] ?? null,
+            'read_timeout' => $options['read_timeout'] ?? null,
+            'send_heartbeat' => $options['send_heartbeat'] ?? null,
+            'receive_heartbeat' => $options['receive_heartbeat'] ?? null,
         ];
 
         foreach ($config as $k => $v) {
@@ -76,9 +76,7 @@ class Connection
         $factory = new StompConnectionFactory($config);
         $context = $factory->createContext();
 
-        $context->getStomp()->getConnection()->setWriteTimeout($writeTimeout);
-
-        return new self($context, $destinationName, $readTimeout, $writeTimeout);
+        return new self($context, $destinationName, $receiveTimeout);
     }
 
     public function send(string $body, array $headers = []): StompMessage
@@ -93,7 +91,7 @@ class Connection
     public function get(): ?StompMessage
     {
         /** @var StompMessage|null $message */
-        $message = $this->getConsumer()->receive($this->readTimeout);
+        $message = $this->getConsumer()->receive($this->receiveTimeout);
 
         if (!$message) {
             return null;
@@ -110,14 +108,6 @@ class Connection
     public function reject(StompMessage $stompMessage): void
     {
         $this->getConsumer()->reject($stompMessage);
-    }
-
-    /**
-     * @throws ConnectionException
-     */
-    public function ping(): void
-    {
-        $this->context->getStomp()->getConnection()->sendAlive($this->writeTimeout);
     }
 
     private function getDestination(): StompDestination

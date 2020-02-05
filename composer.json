@@ -8,9 +8,9 @@
         }
     ],
     "require": {
-        "php": "^7.3",
-        "symfony/messenger": "^4.3",
-        "enqueue/stomp": "^0.9.12"
+        "php": "^7.2",
+        "symfony/messenger": "^4.3 | ^5.0",
+        "enqueue/stomp": "dev-master"
     },
     "autoload": {
         "psr-4": {
