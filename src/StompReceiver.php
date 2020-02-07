@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\Messenger\Transport\Stomp;
+namespace Versh23\StompTransport;
 
 use Enqueue\Stomp\StompMessage;
 use Symfony\Component\Messenger\Envelope;
