@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Versh23\\StompTransport": "src/"
+            "Versh23\\StompTransport\\": "src/"
         }
     },
     "description": "add stomp transport to symfony messenger",

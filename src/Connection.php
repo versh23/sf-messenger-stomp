@@ -136,4 +136,9 @@ class Connection
 
         return $this->producer;
     }
+
+    public function close(): void
+    {
+        $this->context->close();
+    }
 }

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Versh23\StompTransport;
 
-use Interop\Queue\Exception;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Versh23\StompTransport\Stamp\CloseConnectionStamp;
+use Versh23\StompTransport\Stamp\StompStamp;
 
 class StompSender implements SenderInterface
 {
@@ -35,8 +36,12 @@ class StompSender implements SenderInterface
 
         try {
             $message = $this->connection->send($encodedMessage['body'], $encodedMessage['headers'] ?? []);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             throw new TransportException($e->getMessage(), 0, $e);
+        }
+
+        if ($envelope->last(CloseConnectionStamp::class)) {
+            $this->connection->close();
         }
 
         return $envelope->with(new StompStamp($message));
