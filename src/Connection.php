@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\Messenger\Transport\Stomp;
+namespace Versh23\StompTransport;
 
 use Enqueue\Stomp\StompConnectionFactory;
 use Enqueue\Stomp\StompConsumer;
@@ -135,5 +135,10 @@ class Connection
         }
 
         return $this->producer;
+    }
+
+    public function close(): void
+    {
+        $this->context->close();
     }
 }

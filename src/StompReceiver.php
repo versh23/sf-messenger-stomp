@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\Messenger\Transport\Stomp;
+namespace Versh23\StompTransport;
 
 use Enqueue\Stomp\StompMessage;
 use Symfony\Component\Messenger\Envelope;
@@ -11,6 +11,7 @@ use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Versh23\StompTransport\Stamp\StompStamp;
 
 class StompReceiver implements ReceiverInterface
 {
@@ -78,7 +79,7 @@ class StompReceiver implements ReceiverInterface
         try {
             $stamp = $this->findStompStamp($envelope);
             $this->connection->ack($stamp->getStompMessage());
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new TransportException($exception->getMessage(), 0, $exception);
         }
     }
@@ -93,7 +94,7 @@ class StompReceiver implements ReceiverInterface
         try {
             $stamp = $this->findStompStamp($envelope);
             $this->connection->reject($stamp->getStompMessage());
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new TransportException($exception->getMessage(), 0, $exception);
         }
     }
@@ -113,7 +114,7 @@ class StompReceiver implements ReceiverInterface
     {
         try {
             $this->connection->reject($stompMessage);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new TransportException($exception->getMessage(), 0, $exception);
         }
     }
