@@ -10,7 +10,7 @@
     "require": {
         "php": "^7.2",
         "symfony/messenger": "^4.3 | ^5.0",
-        "enqueue/stomp": "dev-master"
+        "enqueue/stomp": "^0.10.1"
     },
     "autoload": {
         "psr-4": {
