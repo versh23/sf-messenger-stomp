@@ -40,8 +40,23 @@ class StompSender implements SenderInterface
             throw new TransportException($e->getMessage(), 0, $e);
         }
 
-        if ($envelope->last(CloseConnectionStamp::class)) {
-            $this->connection->close();
+        /**
+         * @var CloseConnectionStamp|null
+         */
+        $stamp = $envelope->last(CloseConnectionStamp::class);
+
+        if ($stamp) {
+            switch ($stamp->getMod()) {
+                case CloseConnectionStamp::MOD_CONSUMER:
+                    $this->connection->closeConsumer();
+                    break;
+                case CloseConnectionStamp::MOD_PRODUCER:
+                    $this->connection->closeProducer();
+                    break;
+                case CloseConnectionStamp::MOD_ALL:
+                    $this->connection->close();
+                    break;
+            }
         }
 
         return $envelope->with(new StompStamp($message));
