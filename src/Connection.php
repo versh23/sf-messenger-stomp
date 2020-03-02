@@ -6,27 +6,28 @@ namespace Versh23\StompTransport;
 
 use Enqueue\Stomp\StompConnectionFactory;
 use Enqueue\Stomp\StompConsumer;
-use Enqueue\Stomp\StompContext;
-use Enqueue\Stomp\StompDestination;
 use Enqueue\Stomp\StompMessage;
 use Enqueue\Stomp\StompProducer;
 
 class Connection
 {
-    private $context;
     private $destinationName;
 
-    private $destination = null;
     private $consumer = null;
     private $producer = null;
 
     private $receiveTimeout;
 
-    public function __construct(StompContext $context, string $destinationName, int $receiveTimeout)
+    private $connectionFactory;
+
+    private $producerContext = null;
+    private $consumerContext = null;
+
+    public function __construct(StompConnectionFactory $connectionFactory, string $destinationName, int $receiveTimeout)
     {
-        $this->context = $context;
         $this->destinationName = $destinationName;
         $this->receiveTimeout = $receiveTimeout;
+        $this->connectionFactory = $connectionFactory;
     }
 
     public static function create(string $dsn, array $options = []): self
@@ -73,17 +74,17 @@ class Connection
             }
         }
 
-        $factory = new StompConnectionFactory($config);
-        $context = $factory->createContext();
-
-        return new self($context, $destinationName, $receiveTimeout);
+        return new self(new StompConnectionFactory($config), $destinationName, $receiveTimeout);
     }
 
     public function send(string $body, array $headers = []): StompMessage
     {
-        $message = $this->context->createMessage($body, [], $headers);
+        //INIT
+        $this->getProducer();
 
-        $this->getProducer()->send($this->getDestination(), $message);
+        $destination = $this->producerContext->createDestination($this->destinationName);
+        $message = $this->producerContext->createMessage($body, [], $headers);
+        $this->getProducer()->send($destination, $message);
 
         return $message;
     }
@@ -110,19 +111,15 @@ class Connection
         $this->getConsumer()->reject($stompMessage);
     }
 
-    private function getDestination(): StompDestination
-    {
-        if (!$this->destination) {
-            $this->destination = $this->context->createDestination($this->destinationName);
-        }
-
-        return $this->destination;
-    }
-
     private function getConsumer(): StompConsumer
     {
+        if (!$this->consumerContext) {
+            $this->consumerContext = $this->connectionFactory->createContext();
+        }
+
         if (!$this->consumer) {
-            $this->consumer = $this->context->createConsumer($this->getDestination());
+            $destination = $this->consumerContext->createDestination($this->destinationName);
+            $this->consumer = $this->consumerContext->createConsumer($destination);
         }
 
         return $this->consumer;
@@ -130,8 +127,12 @@ class Connection
 
     private function getProducer(): StompProducer
     {
+        if (!$this->producerContext) {
+            $this->producerContext = $this->connectionFactory->createContext();
+        }
+
         if (!$this->producer) {
-            $this->producer = $this->context->createProducer();
+            $this->producer = $this->producerContext->createProducer();
         }
 
         return $this->producer;
@@ -139,6 +140,21 @@ class Connection
 
     public function close(): void
     {
-        $this->context->close();
+        $this->closeConsumer();
+        $this->closeProducer();
+    }
+
+    public function closeProducer(): void
+    {
+        if ($this->producerContext) {
+            $this->producerContext->close();
+        }
+    }
+
+    public function closeConsumer(): void
+    {
+        if ($this->consumerContext) {
+            $this->consumerContext->close();
+        }
     }
 }
