@@ -148,6 +148,8 @@ class Connection
     {
         if ($this->producerContext) {
             $this->producerContext->close();
+            $this->producerContext = null;
+            $this->producer = null;
         }
     }
 
@@ -155,6 +157,8 @@ class Connection
     {
         if ($this->consumerContext) {
             $this->consumerContext->close();
+            $this->consumerContext = null;
+            $this->consumer = null;
         }
     }
 }
