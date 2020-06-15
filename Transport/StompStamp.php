@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\StompTransport\Stamp;
+namespace Versh23\Messenger\Stomp\Transport;
 
 use Enqueue\Stomp\StompMessage;
 use Symfony\Component\Messenger\Stamp\NonSendableStampInterface;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\StompTransport;
+namespace Versh23\Messenger\Stomp\Transport;
 
 use Enqueue\Stomp\StompMessage;
 use Symfony\Component\Messenger\Envelope;
@@ -11,7 +11,6 @@ use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
-use Versh23\StompTransport\Stamp\StompStamp;
 
 class StompReceiver implements ReceiverInterface
 {

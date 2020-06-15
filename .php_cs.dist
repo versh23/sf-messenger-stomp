@@ -1,7 +1,7 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in('src')
+    ->in('Transport')
 ;
 
 return PhpCsFixer\Config::create()
