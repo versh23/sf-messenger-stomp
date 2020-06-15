@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\StompTransport;
+namespace Versh23\Messenger\Stomp\Transport;
 
 use Enqueue\Stomp\StompConnectionFactory;
 use Enqueue\Stomp\StompConsumer;

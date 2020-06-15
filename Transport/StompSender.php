@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Versh23\StompTransport;
+namespace Versh23\Messenger\Stomp\Transport;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
-use Versh23\StompTransport\Stamp\StompStamp;
 
 class StompSender implements SenderInterface
 {

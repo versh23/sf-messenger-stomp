@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Versh23\StompTransport;
+namespace Versh23\Messenger\Stomp\Transport;
 
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
