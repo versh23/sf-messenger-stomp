@@ -9,6 +9,7 @@ use Enqueue\Stomp\StompConsumer;
 use Enqueue\Stomp\StompContext;
 use Enqueue\Stomp\StompMessage;
 use Enqueue\Stomp\StompProducer;
+use Stomp\Exception\ConnectionException;
 
 class Connection
 {
@@ -135,11 +136,22 @@ class Connection
 
     private function checkConnection()
     {
-        if (!$this->context->getStomp()->isConnected()) {
-            $this->context->getStomp()->disconnect();
-            $this->producer = null;
-            $this->consumer = null;
-            $this->context->getStomp()->connect();
+        try {
+            $this->context->getStomp()->getConnection()->sendAlive();
+        } catch (ConnectionException $exception) {
+            $this->reconnect();
         }
+
+        if (!$this->context->getStomp()->isConnected()) {
+            $this->reconnect();
+        }
+    }
+
+    private function reconnect()
+    {
+        $this->context->getStomp()->disconnect();
+        $this->producer = null;
+        $this->consumer = null;
+        $this->context->getStomp()->connect();
     }
 }
